@@ -1,10 +1,8 @@
 from urllib.request import urlopen
 import asyncio
 import re
-import pandas as pd
 import requests
 from PIL import Image
-import openpyxl
 from openpyxl import load_workbook
 import csv
 import cv2
@@ -90,6 +88,8 @@ class Program:
 
         for row in sheet.iter_rows(min_row=4, values_only=True):
             id, publisher_id, image_url, is_image_large = row[0], row[1], row[2], row[3]
+
+            id= int(id) if id is not None else 0
             add_List = AllQuestions(id,publisher_id,image_url,is_image_large)
             Program.excel_dtos.append(add_List)
 
@@ -186,15 +186,13 @@ class Program:
                 question1.AnswersOptionsCount = answersOption
                 
                 data.append(question1)   
-                gray = img_np
-                await Program.download_Image(gray,str(question1.BookSectionCropId))
+                print(img_np)
+                print(gray)
+                await Program.download_Image(img_np,str(question1.BookSectionCropId))
                 cv2.imshow("Image", img_np)
-                #cv2.imwrite(os.path.join(os.path.expanduser("~"), "Desktop", "saved_image.jpg"), img_np)
 
-                cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 
-
                 await Program.csv_Write(data)
                 
             except Exception as ex:
@@ -232,20 +230,32 @@ class Program:
     @staticmethod
     async def download_Image(img,name):
         try:
-                print("indirme işlemi")
-                img_file_name = os.path.join(output_folder, f"{name}.jpg")
-                cv2.imwrite(str(img_file_name), img)
+                print(name)
+                string_name = str(name)
+                output_folder = "C:/Users/senat/OneDrive/Masaüstü/img_path"
+                img_file_name = os.path.join(output_folder, f"{string_name}.jpg")
+
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+                success = Image.fromarray(img).save(img_file_name)
+
+                
+                if success:
+                    print(f"Dosya başarıyla kaydedildi: {img_file_name}")
+                else:
+                    print(f"Dosya kaydetme başarısız.")
+
                 if os.path.isfile(img_file_name):
                     print(f"Dosya başarıyla kaydedildi: {img_file_name}")
                 else:
                     print("Dosya kaydetme başarısız.")
                     
         except Exception as ex:
+
             print(f"Indırmede Hata oluştu: {ex}")  
 
 if __name__ == "__main__":
-    output_folder = "C:/Users/senat/OneDrive/Masaüstü/img_path"
-
 
     asyncio.run(Program.main())
 
